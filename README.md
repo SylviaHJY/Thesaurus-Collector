@@ -1,8 +1,8 @@
-# Thesaurus Collector
+# Gleaner
 
 **把你平时真实遇到、亲手收集的英文词汇，变成每天可复习、可追踪、可长期记住的个人词库。**
 
-Thesaurus Collector 是一个为英文深度阅读者做的 **personal vocabulary retention tool**。它面向那些已经在真实阅读、工作、学习中持续遇到生词，也有主动收集习惯，但收集完之后复习不起来的人。
+Gleaner 是一个为英文深度阅读者做的 **personal vocabulary retention tool**。它面向那些已经在真实阅读、工作、学习中持续遇到生词，也有主动收集习惯，但收集完之后复习不起来的人。
 
 典型场景是这样的：
 
@@ -16,7 +16,7 @@ Thesaurus Collector 是一个为英文深度阅读者做的 **personal vocabular
 - **Private and local-first**: 本地 SQLite 保存，无账号，无社交压力，不把个人词库交给云端服务。
 - **Review, not just collect**: 数据库管理、API 补全、离线词典、例句编辑、每日抽词、选择题、拼写题、单词卡、遗忘曲线复习都围绕“长期记住”设计。
 
-In short: Thesaurus Collector turns personally collected English words and phrases into a private, daily, trackable review system.
+In short: Gleaner turns personally collected English words and phrases into a private, daily, trackable review system.
 
 ## Problem
 
@@ -32,7 +32,7 @@ This app is designed around that personal workflow:
 
 ## Product Positioning
 
-Thesaurus Collector is a **personal vocabulary retention tool**.
+Gleaner is a **personal vocabulary retention tool**.
 
 It is not a social learning app, not a generic word-of-the-day feed, and not a cloud vocabulary service. It is private, local-first, no-account, and low-pressure.
 
@@ -463,8 +463,8 @@ Prerequisites:
 Clone and install:
 
 ```bash
-git clone https://github.com/SylviaHJY/Thesaurus-Collector.git
-cd Thesaurus-Collector
+git clone https://github.com/SylviaHJY/Gleaner.git
+cd Gleaner
 npm install
 ```
 
@@ -576,7 +576,7 @@ See `app/main/data/ECDICT-NOTICE.md` for license and rebuild details.
 
 ## Privacy
 
-Thesaurus Collector is local-first:
+Gleaner is local-first:
 
 - no account;
 - no social feed;
