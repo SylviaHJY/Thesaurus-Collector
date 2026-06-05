@@ -319,7 +319,7 @@ describe("random review simulation", () => {
 });
 
 describe("DataStore.recordReview — UI contract", () => {
-  it("shouldComplete false does not add completedIds but still increments seenCount", () => {
+  it("shouldComplete false records quiz feedback without completing today's queue", () => {
     const adapter = new MemoryAdapter();
     const store = new DataStore("/tmp/vocab-scheduling-test-unused");
     store.adapter = adapter;
@@ -346,14 +346,37 @@ describe("DataStore.recordReview — UI contract", () => {
     assert.equal(saved.seenCount, 1);
     assert.equal(saved.correctCount, 1);
     assert.deepEqual(session.completedIds, []);
+  });
+
+  it("completeTodayEntry completes the queue without adding another review result", () => {
+    const adapter = new MemoryAdapter();
+    const store = new DataStore("/tmp/vocab-scheduling-test-unused");
+    store.adapter = adapter;
+    store.storageKind = "memory";
+
+    const word = entry({ id: "alpha", term: "alpha" });
+    adapter.saveEntry(word);
+    adapter.saveSession({
+      date: todayKey(),
+      entryIds: ["alpha"],
+      completedIds: []
+    });
 
     store.recordReview({
       entryId: "alpha",
-      mode: "card",
-      result: "remembered",
-      shouldComplete: true
+      mode: "choice",
+      result: "wrong",
+      shouldComplete: false
     });
 
-    assert.deepEqual(adapter.getSession(todayKey()).completedIds, ["alpha"]);
+    store.completeTodayEntry("alpha");
+
+    const saved = adapter.getEntries().find((item) => item.id === "alpha");
+    const session = adapter.getSession(todayKey());
+
+    assert.equal(saved.seenCount, 1);
+    assert.equal(saved.correctCount, 0);
+    assert.equal(saved.wrongCount, 1);
+    assert.deepEqual(session.completedIds, ["alpha"]);
   });
 });

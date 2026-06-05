@@ -871,6 +871,21 @@ export class DataStore {
     return this.getState();
   }
 
+  completeTodayEntry(entryId) {
+    const entry = this.adapter.getEntryById(entryId);
+    if (!entry) throw new Error("Entry not found.");
+
+    const date = todayKey();
+    const session = this.adapter.getSession(date);
+    if (session && !session.completedIds.includes(entryId)) {
+      session.completedIds.push(entryId);
+      session.updatedAt = nowIso();
+      this.adapter.saveSession(session);
+    }
+
+    return this.getState();
+  }
+
   ensureTodaySession(settings, entries, force = false) {
     const date = todayKey();
     const existing = this.adapter.getSession(date);

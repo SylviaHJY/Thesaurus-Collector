@@ -430,6 +430,10 @@ button:disabled {
   grid-template-columns: 44px 1fr 1fr;
 }
 
+.card-actions .full-width {
+  grid-column: 1 / -1;
+}
+
 .secondary-button,
 .primary-button,
 .icon-only-button,
@@ -567,12 +571,30 @@ button:disabled {
   padding: 13px 14px;
 }
 
+.answer-callout.success {
+  border-color: #99f6e4;
+  background: var(--green-soft);
+}
+
+.answer-callout.error {
+  border-color: #fecaca;
+  background: var(--red-soft);
+}
+
 .answer-callout strong {
   display: block;
   color: var(--accent-dark);
   font-size: 13px;
   font-weight: 850;
   margin-bottom: 5px;
+}
+
+.answer-callout.success strong {
+  color: var(--green);
+}
+
+.answer-callout.error strong {
+  color: var(--red);
 }
 
 .answer-callout p {
@@ -583,6 +605,14 @@ button:disabled {
   font-weight: 680;
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+.answer-callout.success p {
+  color: #115e59;
+}
+
+.answer-callout.error p {
+  color: #7f1d1d;
 }
 
 .prompt-panel {

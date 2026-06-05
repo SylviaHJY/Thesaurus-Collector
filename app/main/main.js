@@ -279,6 +279,8 @@ function registerIpc() {
 
   ipcMain.handle("vocab:record-review", (_event, payload) => store.recordReview(payload));
 
+  ipcMain.handle("vocab:complete-today-entry", (_event, entryId) => store.completeTodayEntry(entryId));
+
   ipcMain.handle("vocab:set-window-mode", (_event, mode) => {
     setWindowMode(mode === "settings" ? "settings" : "study");
     return true;

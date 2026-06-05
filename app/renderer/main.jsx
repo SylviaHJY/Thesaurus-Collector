@@ -196,6 +196,12 @@ function createPreviewApi() {
       }
       return recompute();
     },
+    completeTodayEntry: async (entryId) => {
+      if (!previewState.todaySession.completedIds.includes(entryId)) {
+        previewState.todaySession.completedIds.push(entryId);
+      }
+      return recompute();
+    },
     enrichEntry: async (entryId) => {
       previewState.entries = previewState.entries.map((entry) =>
         entry.id === entryId
@@ -387,6 +393,7 @@ function App() {
     return modes.includes(match?.[1]) ? match[1] : null;
   });
   const [reviewEntryId, setReviewEntryId] = useState(null);
+  const [completionOnlyEntryId, setCompletionOnlyEntryId] = useState(null);
   const [isBusy, setIsBusy] = useState(false);
   const currentEntry = getTodayEntry(state);
   const currentIndex = getEntryIndex(state, currentEntry);
@@ -395,21 +402,32 @@ function App() {
   function navigate(nextView) {
     setView(nextView);
     if (nextView !== "review") setReviewEntryId(null);
+    if (nextView !== "study") setCompletionOnlyEntryId(null);
   }
 
   async function refresh() {
     setState(await api.getState());
   }
 
-  async function runAction(action) {
+  async function runAction(action, { resetMode = true } = {}) {
     setIsBusy(true);
     try {
       const next = await action();
       setState(next);
-      setStudyOverride(null);
+      if (resetMode) setStudyOverride(null);
     } finally {
       setIsBusy(false);
     }
+  }
+
+  function revealCurrentCard(entryId) {
+    setCompletionOnlyEntryId(entryId);
+    setStudyOverride("card");
+  }
+
+  async function completeTodayEntry(entryId) {
+    await runAction(() => api.completeTodayEntry(entryId));
+    setCompletionOnlyEntryId(null);
   }
 
   useEffect(() => {
@@ -424,8 +442,8 @@ function App() {
     if (view !== "study" || !currentEntry || currentEntry.dictionaryLookupAttemptedAt) return;
     const isIncomplete =
       !currentEntry.referenceMeaning ||
-      currentEntry.phonetics.length === 0 ||
-      currentEntry.examples.length === 0;
+      (currentEntry.phonetics ?? []).length === 0 ||
+      (currentEntry.examples ?? []).length === 0;
     if (!isIncomplete) return;
 
     let cancelled = false;
@@ -454,10 +472,12 @@ function App() {
           entry={currentEntry}
           mode={activeMode}
           busy={isBusy}
-          setMode={setStudyOverride}
           onNavigate={navigate}
           onFavorite={(entryId, exampleIndex) => runAction(() => api.favoriteExample({ entryId, exampleIndex }))}
-          onRecord={(payload) => runAction(() => api.recordReview(payload))}
+          onRecord={(payload) => runAction(() => api.recordReview(payload), { resetMode: payload.shouldComplete !== false })}
+          onComplete={completeTodayEntry}
+          onReveal={revealCurrentCard}
+          completionOnlyEntryId={completionOnlyEntryId}
         />
       ) : view === "completed" ? (
         <CompletedSurface
@@ -474,7 +494,6 @@ function App() {
           entry={state.entries.find((entry) => entry.id === reviewEntryId)}
           mode="card"
           busy={isBusy}
-          setMode={setStudyOverride}
           isReview
           onNavigate={navigate}
           onFavorite={(entryId, exampleIndex) => runAction(() => api.favoriteExample({ entryId, exampleIndex }))}
@@ -501,19 +520,43 @@ function App() {
   );
 }
 
-function StudySurface({ state, entry, mode, busy, setMode, onNavigate, onFavorite, onRecord, isReview = false }) {
+function StudySurface({
+  state,
+  entry,
+  mode,
+  busy,
+  onNavigate,
+  onFavorite,
+  onRecord,
+  onComplete,
+  onReveal,
+  completionOnlyEntryId,
+  isReview = false
+}) {
   if (!entry) {
     return <DoneCard state={state} onNavigate={onNavigate} />;
   }
 
+  const completionOnly = completionOnlyEntryId === entry.id;
+
   return (
     <section className="study-wrap">
       {mode === "choice" ? (
-        <ChoiceCard state={state} entry={entry} busy={busy} setMode={setMode} onNavigate={onNavigate} onRecord={onRecord} />
+        <ChoiceCard state={state} entry={entry} busy={busy} onComplete={onComplete} onNavigate={onNavigate} onRecord={onRecord} onReveal={onReveal} />
       ) : mode === "spell" && entry.type === "word" ? (
-        <SpellCard state={state} entry={entry} busy={busy} setMode={setMode} onNavigate={onNavigate} onRecord={onRecord} />
+        <SpellCard state={state} entry={entry} busy={busy} onComplete={onComplete} onNavigate={onNavigate} onRecord={onRecord} onReveal={onReveal} />
       ) : (
-        <WordCard state={state} entry={entry} busy={busy} isReview={isReview} onNavigate={onNavigate} onFavorite={onFavorite} onRecord={onRecord} />
+        <WordCard
+          state={state}
+          entry={entry}
+          busy={busy}
+          completionOnly={completionOnly}
+          isReview={isReview}
+          onComplete={onComplete}
+          onNavigate={onNavigate}
+          onFavorite={onFavorite}
+          onRecord={onRecord}
+        />
       )}
     </section>
   );
@@ -601,7 +644,7 @@ function Phonetics({ entry }) {
   );
 }
 
-function WordCard({ state, entry, busy, isReview = false, onNavigate, onFavorite, onRecord }) {
+function WordCard({ state, entry, busy, completionOnly = false, isReview = false, onComplete, onNavigate, onFavorite, onRecord }) {
   return (
     <article className="word-card">
       <CardTop state={state} label={isReview ? "回看" : "展示"} icon={<BookOpen size={15} />} onNavigate={onNavigate} isReview={isReview} />
@@ -626,9 +669,9 @@ function WordCard({ state, entry, busy, isReview = false, onNavigate, onFavorite
               {tag}
             </span>
           ))}
-          {entry.forms.length ? (
+          {(entry.forms ?? []).length ? (
             <span className="forms">
-              变形 {entry.forms.map((form) => <strong key={form}>{form}</strong>)}
+              变形 {(entry.forms ?? []).map((form) => <strong key={form}>{form}</strong>)}
             </span>
           ) : null}
         </div>
@@ -654,6 +697,10 @@ function WordCard({ state, entry, busy, isReview = false, onNavigate, onFavorite
             <button className="secondary-button" onClick={() => onNavigate("completed")}>返回已背</button>
             <button className="primary-button" onClick={() => onNavigate("study")}>继续背词</button>
           </>
+        ) : completionOnly ? (
+          <button className="primary-button full-width" disabled={busy} onClick={() => onComplete(entry.id)}>
+            继续背词
+          </button>
         ) : (
           <>
             <button className="secondary-button" disabled={busy} onClick={() => onRecord({ entryId: entry.id, mode: "card", result: "forgotten" })}>
@@ -669,19 +716,39 @@ function WordCard({ state, entry, busy, isReview = false, onNavigate, onFavorite
   );
 }
 
-function ChoiceCard({ state, entry, busy, setMode, onNavigate, onRecord }) {
-  const [selected, setSelected] = useState(null);
-  const options = useMemo(() => makeChoiceOptions(entry, state.entries), [entry, state.entries]);
+function ChoiceCard({ state, entry, busy, onComplete, onNavigate, onRecord, onReveal }) {
+  const [answer, setAnswer] = useState(null);
+  const [options, setOptions] = useState(() => makeChoiceOptions(entry, state.entries));
+
+  useEffect(() => {
+    setOptions(makeChoiceOptions(entry, state.entries));
+    setAnswer(null);
+  }, [entry.id]);
 
   async function selectOption(option) {
-    if (selected) return;
-    setSelected(option);
+    if (answer || busy) return;
+    const result = option.correct ? "correct" : "wrong";
+    setAnswer({ kind: result, selectedKey: option.key });
     await onRecord({
       entryId: entry.id,
       mode: "choice",
-      result: option.correct ? "correct" : "wrong"
+      result,
+      shouldComplete: false
     });
   }
+
+  async function forget() {
+    if (answer || busy) return;
+    setAnswer({ kind: "forgotten", selectedKey: null });
+    await onRecord({
+      entryId: entry.id,
+      mode: "choice",
+      result: "forgotten",
+      shouldComplete: false
+    });
+  }
+
+  const answered = Boolean(answer);
 
   return (
     <article className="word-card quiz-card">
@@ -706,10 +773,11 @@ function ChoiceCard({ state, entry, busy, setMode, onNavigate, onRecord }) {
             key={option.key}
             className={classNames(
               "option-button",
-              selected && option.correct && "correct",
-              selected?.key === option.key && !option.correct && "wrong"
+              answered && option.correct && "correct",
+              answer?.selectedKey === option.key && !option.correct && "wrong"
             )}
             onClick={() => selectOption(option)}
+            disabled={busy || answered}
           >
             <span>{option.key}</span>
             {option.meaning}
@@ -717,39 +785,71 @@ function ChoiceCard({ state, entry, busy, setMode, onNavigate, onRecord }) {
         ))}
       </section>
 
-      {selected ? (
-        <section className="answer-callout">
-          <strong>正确答案</strong>
+      {answered ? (
+        <section className={classNames("answer-callout", answer.kind === "correct" ? "success" : "error")}>
+          <strong>{answer.kind === "correct" ? "回答正确" : "正确答案"}</strong>
           <p>{quizMeaning(entry) || MISSING_MEANING_PLACEHOLDER}</p>
           {hasDistinctReference(entry) ? <p className="answer-your">你的释义：{entry.userMeaning}</p> : null}
         </section>
       ) : null}
 
       <footer className="card-actions">
-        <button className="secondary-button" disabled={busy} onClick={() => onRecord({ entryId: entry.id, mode: "choice", result: "forgotten" })}>
-          不记得
-        </button>
-        <button className="primary-button" disabled={!selected || busy} onClick={() => setMode("card")}>
-          看完整卡片
-        </button>
+        {answered ? (
+          <>
+            <button className="secondary-button" disabled={busy} onClick={() => onComplete(entry.id)}>
+              继续背词
+            </button>
+            <button className="primary-button" disabled={busy} onClick={() => onReveal(entry.id)}>
+              看完整卡片
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="secondary-button" disabled={busy} onClick={forget}>
+              不记得
+            </button>
+            <button className="primary-button" disabled>
+              看完整卡片
+            </button>
+          </>
+        )}
       </footer>
     </article>
   );
 }
 
-function SpellCard({ state, entry, busy, setMode, onNavigate, onRecord }) {
+function SpellCard({ state, entry, busy, onComplete, onNavigate, onRecord, onReveal }) {
   const model = useMemo(() => makeSpellModel(entry.term), [entry.term]);
   const [value, setValue] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const correct = value.toLowerCase() === model.hidden;
+  const [answer, setAnswer] = useState(null);
+  const submitted = Boolean(answer);
+  const correct = answer?.kind === "correct";
+
+  useEffect(() => {
+    setValue("");
+    setAnswer(null);
+  }, [entry.id]);
 
   async function submit() {
-    if (!value) return;
-    setSubmitted(true);
+    if (!value || submitted || busy) return;
+    const result = value.toLowerCase() === model.hidden ? "correct" : "wrong";
+    setAnswer({ kind: result, submittedValue: value });
     await onRecord({
       entryId: entry.id,
       mode: "spell",
-      result: correct ? "correct" : "wrong"
+      result,
+      shouldComplete: false
+    });
+  }
+
+  async function forget() {
+    if (submitted || busy) return;
+    setAnswer({ kind: "forgotten", submittedValue: "" });
+    await onRecord({
+      entryId: entry.id,
+      mode: "spell",
+      result: "forgotten",
+      shouldComplete: false
     });
   }
 
@@ -772,16 +872,18 @@ function SpellCard({ state, entry, busy, setMode, onNavigate, onRecord }) {
         className={classNames("spell-input", submitted && (correct ? "correct" : "wrong"))}
         value={value}
         onChange={(event) => setValue(event.target.value.replace(/[^a-zA-Z]/g, "").slice(0, model.hidden.length))}
+        disabled={submitted || busy}
         placeholder={`填写 ${model.hidden.length} 个字母`}
       />
       <p className="hint-line">提示：保留首尾字母，隐藏中间部分字母。</p>
 
       {submitted ? (
-        <section className="answer-callout">
+        <section className={classNames("answer-callout", correct ? "success" : "error")}>
           <strong>{correct ? "拼写正确" : "正确拼写"}</strong>
           <p>
-            {entry.term} · {firstPhonetic(entry)} · {entry.examples?.[0]?.en}
+            {entry.term} · {firstPhonetic(entry)}
           </p>
+          {entry.examples?.[0]?.en ? <p className="answer-example">{entry.examples[0].en}</p> : null}
         </section>
       ) : null}
 
@@ -789,10 +891,10 @@ function SpellCard({ state, entry, busy, setMode, onNavigate, onRecord }) {
         <button className="icon-only-button" onClick={() => playPronunciation(entry, "US")}>
           <Headphones size={17} />
         </button>
-        <button className="secondary-button" disabled={busy} onClick={() => onRecord({ entryId: entry.id, mode: "spell", result: "forgotten" })}>
-          不记得
+        <button className="secondary-button" disabled={busy} onClick={submitted ? () => onComplete(entry.id) : forget}>
+          {submitted ? "继续背词" : "不记得"}
         </button>
-        <button className="primary-button" disabled={busy} onClick={submitted ? () => setMode("card") : submit}>
+        <button className="primary-button" disabled={busy || (!submitted && !value)} onClick={submitted ? () => onReveal(entry.id) : submit}>
           {submitted ? "看完整卡片" : "提交"}
         </button>
       </footer>

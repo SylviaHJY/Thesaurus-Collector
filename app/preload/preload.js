@@ -11,6 +11,7 @@ const api = {
   deleteEntry: (entryId) => ipcRenderer.invoke("vocab:delete-entry", entryId),
   favoriteExample: (payload) => ipcRenderer.invoke("vocab:favorite-example", payload),
   recordReview: (payload) => ipcRenderer.invoke("vocab:record-review", payload),
+  completeTodayEntry: (entryId) => ipcRenderer.invoke("vocab:complete-today-entry", entryId),
   enrichEntry: (entryId) => ipcRenderer.invoke("vocab:enrich-entry", entryId),
   setWindowMode: (mode) => ipcRenderer.invoke("vocab:set-window-mode", mode),
   minimizeWindow: () => ipcRenderer.invoke("window:minimize"),
