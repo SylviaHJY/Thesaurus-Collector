@@ -1,22 +1,22 @@
-# Vocabulary Desktop
+# Thesaurus Collector
 
-A local-first desktop vocabulary retention tool for people who keep meeting real English words in reading, work, and study, save them somewhere, and then never quite get back to them.
+**把你平时真实遇到、亲手收集的英文词汇，变成每天可复习、可追踪、可长期记住的个人词库。**
 
-The core product idea is simple:
+Thesaurus Collector 是一个为英文深度阅读者做的 **personal vocabulary retention tool**。它面向那些已经在真实阅读、工作、学习中持续遇到生词，也有主动收集习惯，但收集完之后复习不起来的人。
 
-> Turn the English vocabulary you personally collect into a private, daily, trackable review system.
+典型场景是这样的：
 
-It is built for deep English readers and knowledge workers who already have the habit:
+> 读英文内容 → 遇到生词 → 当时查了 → 觉得应该记住 → 存到某处 → 之后再也没看 → 下次又遇到又忘了。
 
-1. Read English content.
-2. Meet a word or phrase.
-3. Look it up in the moment.
-4. Decide it is worth remembering.
-5. Save it to Obsidian, a PDF, a note, or a list.
-6. Forget to review it.
-7. Meet it again later and feel the same small pain.
+这个应用要解决的就是最后那一步：让用户持续把自己遇到的词转化为长期记忆。它会把你的个人词库本地保存起来，结合离线词典和在线 API 自动补全音标、发音和例句，再通过每日抽词、词卡、选择题、拼写题和遗忘曲线复习，把“我应该记住它”变成真正可追踪的记忆过程。
 
-Vocabulary Desktop closes that loop. It turns your collected words into a personal vocabulary database, schedules a small daily queue, shows compact desktop review cards, and records whether each word is remembered, missed, or forgotten.
+核心优势：
+
+- **Personal vocabulary database**: 词源来自你真实遇到、亲手收集的语境，不是随机背别人的词表。
+- **Private and local-first**: 本地 SQLite 保存，无账号，无社交压力，不把个人词库交给云端服务。
+- **Review, not just collect**: 数据库管理、API 补全、离线词典、例句编辑、每日抽词、选择题、拼写题、单词卡、遗忘曲线复习都围绕“长期记住”设计。
+
+In short: Thesaurus Collector turns personally collected English words and phrases into a private, daily, trackable review system.
 
 ## Problem
 
@@ -32,7 +32,7 @@ This app is designed around that personal workflow:
 
 ## Product Positioning
 
-Vocabulary Desktop is a **personal vocabulary retention tool**.
+Thesaurus Collector is a **personal vocabulary retention tool**.
 
 It is not a social learning app, not a generic word-of-the-day feed, and not a cloud vocabulary service. It is private, local-first, no-account, and low-pressure.
 
@@ -58,23 +58,99 @@ The advantage is not that it has the biggest dictionary. The advantage is that i
 - **No account**: data stays on the user's machine.
 - **Autostart and reminders**: macOS login item support plus configurable reminder interval within active hours.
 
-## Screenshots
+## Product Tour
 
-### Compact Study Card
+The screenshots are grouped by workflow instead of stacked one by one: plan the day, manage the database, review words, and keep useful material coming back.
 
-![Compact study card](docs/screenshots/study-card.png)
+### Plan And Database
 
-### Settings And Daily Plan
+<table>
+  <tr>
+    <td width="50%">
+      <strong>Daily plan</strong><br/>
+      Set daily word count, active hours, reminder interval, and mixed review modes.
+      <br/><br/>
+      <img src="docs/screenshots/01-daily-plan.png" alt="Daily plan settings" width="100%">
+    </td>
+    <td width="50%">
+      <strong>Vocabulary database</strong><br/>
+      Add words, keep personal meanings and examples, search SQLite, and retry enrichment.
+      <br/><br/>
+      <img src="docs/screenshots/02-library-management.png" alt="Vocabulary database management" width="100%">
+    </td>
+  </tr>
+</table>
 
-![Settings page](docs/screenshots/settings.png)
+### Review Experience
 
-### Choice Quiz
+<table>
+  <tr>
+    <td width="33%">
+      <strong>Word card</strong><br/>
+      Full meaning, phonetics, US/UK playback, examples, tags, and favorite examples.
+      <br/><br/>
+      <img src="docs/screenshots/09-review-card.png" alt="Full review word card" width="100%">
+    </td>
+    <td width="33%">
+      <strong>Choice quiz</strong><br/>
+      Pick the correct meaning from four options, with pronunciation available in quiz mode.
+      <br/><br/>
+      <img src="docs/screenshots/10-choice-quiz.png" alt="Multiple choice quiz" width="100%">
+    </td>
+    <td width="33%">
+      <strong>Spelling quiz</strong><br/>
+      Reconstruct the word from a Chinese meaning and partial-letter hint.
+      <br/><br/>
+      <img src="docs/screenshots/11-spelling-quiz.png" alt="Spelling quiz" width="100%">
+    </td>
+  </tr>
+</table>
 
-![Choice quiz](docs/screenshots/choice.png)
+### Retention And Sources
 
-### Spelling Quiz
+<table>
+  <tr>
+    <td width="50%">
+      <strong>Review history</strong><br/>
+      Track remembered, forgotten, and wrong counts; open any reviewed word as a full card.
+      <br/><br/>
+      <img src="docs/screenshots/04-review-history.png" alt="Review history" width="100%">
+    </td>
+    <td width="50%">
+      <strong>Dictionary sources</strong><br/>
+      ECDICT provides offline Chinese reference meanings and phonetics; online APIs add audio and examples.
+      <br/><br/>
+      <img src="docs/screenshots/05-dictionary-sources.png" alt="Dictionary source settings" width="100%">
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <strong>Favorite examples</strong><br/>
+      Keep the sentences worth imitating, especially the ones from your own reading or work context.
+      <br/><br/>
+      <img src="docs/screenshots/03-favorite-examples.png" alt="Favorite examples" width="100%">
+    </td>
+    <td width="50%">
+      <strong>Word detail modal</strong><br/>
+      Compare your meaning with the offline reference, replay pronunciation, and review examples in context.
+      <br/><br/>
+      <img src="docs/screenshots/06-word-detail-modal.png" alt="Word detail modal" width="100%">
+    </td>
+  </tr>
+</table>
 
-![Spelling quiz](docs/screenshots/spell.png)
+### Completion Flow
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/07-done-state.png" alt="Daily queue completed" width="100%">
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/08-completed-list.png" alt="Completed words list" width="100%">
+    </td>
+  </tr>
+</table>
 
 ## Architecture
 
@@ -500,7 +576,7 @@ See `app/main/data/ECDICT-NOTICE.md` for license and rebuild details.
 
 ## Privacy
 
-Vocabulary Desktop is local-first:
+Thesaurus Collector is local-first:
 
 - no account;
 - no social feed;
