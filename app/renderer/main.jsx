@@ -751,7 +751,7 @@ function ChoiceCard({ state, entry, busy, onNavigate, onRecord, onReveal }) {
   const answered = Boolean(answer);
 
   return (
-    <article className="word-card quiz-card">
+    <article className={classNames("word-card quiz-card", answered && "answered")}>
       <CardTop state={state} label="选择" icon={<FilePlus2 size={15} />} onNavigate={onNavigate} />
       <p className="question-label">这个单词是什么意思？</p>
       <h1 className="word-title">{entry.term}</h1>
@@ -848,7 +848,7 @@ function SpellCard({ state, entry, busy, onNavigate, onRecord, onReveal }) {
   }
 
   return (
-    <article className="word-card spell-card">
+    <article className={classNames("word-card spell-card", submitted && "answered")}>
       <CardTop state={state} label="拼写" icon={<PencilLine size={15} />} onNavigate={onNavigate} />
       <p className="question-label">根据中文释义补全单词</p>
 
